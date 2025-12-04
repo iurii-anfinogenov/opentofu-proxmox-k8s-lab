@@ -14,6 +14,6 @@ provider "proxmox" {
   ssh {
     username    = "root"
     agent       = true
-    private_key = file("~/.ssh/id_ed25519")
+    private_key = file(pathexpand("~/.ssh/id_ed25519"))
   }
 }  

@@ -1,61 +1,28 @@
-resource "proxmox_virtual_environment_file" "cloudinit" {
-  for_each     = local.nodes
-  content_type = "snippets"
-  datastore_id = var.cloudinit_datastore
-  node_name    = var.proxmox_node
-
-  source_raw {
-    file_name = "${each.key}.yml"
-
-    data = templatefile(
-      "${path.module}/cloud-config/node-base.yml",
-      {
-        hostname = "${var.hostname_prefix}-${each.value.role}-${each.value.index}"
-        ssh_key  = local.ssh_public_key
-      }
-    )
-  }
+data "local_file" "ssh_key" {
+  filename = pathexpand("~/.ssh/id_ed25519.pub")
 }
 
-resource "proxmox_virtual_environment_vm" "nodes" {
-  for_each = local.nodes
 
-  name      = "${var.hostname_prefix}-${each.value.role}-${each.value.index}"
-  node_name = var.proxmox_node
-  vm_id     = local.vmid[each.key]
+module "cluster" {
+  source = "./modules/k8s-node"
 
-  agent {
-    enabled = true
-  }
+  nodes   = local.nodes
+  ssh_key = trimspace(data.local_file.ssh_key.content)
 
-  cpu {
-    cores = each.value.cpu
-  }
+  hostname_prefix   = var.hostname_prefix
+  cluster_ip_start  = var.cluster_ip_start
+  master_vmid_start = var.master_vmid_start
+  worker_vmid_start = var.worker_vmid_start
 
-  memory {
-    dedicated = each.value.memory
-  }
+  cloudinit_datastore = var.cloudinit_datastore
+  proxmox_node        = var.proxmox_node
 
-  network_device {
-    bridge = var.node_bridge
-  }
+  node_bridge     = var.node_bridge
+  image_datastore = var.image_datastore
+  image_file      = var.image_file
+  disk_interface  = var.disk_interface
 
-  disk {
-    datastore_id = each.value.datastore
-    import_from  = "${var.image_datastore}:${var.image_file}"
-    interface    = var.disk_interface
-    size         = each.value.disk
-  }
-
-  initialization {
-    datastore_id      = each.value.datastore
-    user_data_file_id = proxmox_virtual_environment_file.cloudinit[each.key].id
-
-    ip_config {
-      ipv4 {
-        address = "${var.network_base}.${local.ip_map[each.key]}/${var.network_cidr}"
-        gateway = var.cluster_gateway
-      }
-    }
-  }
+  network_base    = var.network_base
+  network_cidr    = var.network_cidr
+  cluster_gateway = var.cluster_gateway
 }

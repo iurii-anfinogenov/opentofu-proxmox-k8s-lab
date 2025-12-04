@@ -1,0 +1,62 @@
+# ============================
+# OpenTofu / Terraform
+# ============================
+
+# Local state
+*.tfstate
+*.tfstate.*
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Generated plan files
+*.tfplan
+
+# Local override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# .terraform working directory
+.terraform/
+.terraform.lock.hcl
+
+# OpenTofu plugin cache (local mirror)
+.terraform.d/
+
+# ============================
+# Cloud-init snippets (root-level)
+# (Модуль хранит snippets в Proxmox, не надо трекать локальные)
+# ============================
+*.yaml
+*.yml
+
+# Но НЕ игнорируем модули:
+!/modules/k8s-node/**
+!/modules/k8s-node/cloud-config/*
+
+# ============================
+# SSH keys — важная безопасность
+# ============================
+*.pem
+*.key
+*.pub
+id_*
+!modules/**/id_*
+
+# ============================
+# ОС и редакторы
+# ============================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+
+# ============================
+# Python / tools
+# ============================
+__pycache__/
+*.pyc

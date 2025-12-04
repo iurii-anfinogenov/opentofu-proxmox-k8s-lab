@@ -2,8 +2,6 @@ proxmox_endpoint     = "https://192.168.22.5:8006/api2/json"
 proxmox_token_id     = "terraform@pve!tofu"
 proxmox_token_secret = "4b6fb4f5-cdeb-4a01-a669-ef4e816beac7"
 
-master_count      = 1
-worker_count      = 2
 
 master_vmid_start = 4000
 worker_vmid_start = 4010

@@ -12,11 +12,6 @@ variable "cloudinit_datastore" {
   default = "local"
 }
 
-variable "disk_datastore" {
-  type    = string
-  default = "local-lvm"
-}
-
 variable "disk_interface" {
   type    = string
   default = "virtio0"
@@ -35,14 +30,6 @@ variable "image_file" {
 variable "hostname_prefix" {
   type    = string
   default = "k8s"
-}
-
-variable "master_count" {
-  default = 1
-}
-
-variable "worker_count" {
-  default = 1
 }
 
 variable "master_cpu" {
