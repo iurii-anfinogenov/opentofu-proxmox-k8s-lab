@@ -1,0 +1,63 @@
+#############################################
+# Cloud-init YAML → загрузка в snippets
+#############################################
+resource "proxmox_virtual_environment_file" "cloudinit_user_data" {
+  content_type = "snippets"
+  datastore_id = "local"
+  node_name    = "ve"
+
+  source_raw {
+    file_name = "cloud-config.yml"
+    data      = file("${path.module}/cloud-config.yml")
+  }
+}
+
+#############################################
+# Виртуальная машина
+#############################################
+resource "proxmox_virtual_environment_vm" "node1" {
+  name      = "k8s-node-1"
+  node_name = "ve"
+
+  agent {
+    enabled = true
+  }
+
+  cpu {
+    cores = 2
+  }
+
+  memory {
+    dedicated = 4096
+  }
+
+  network_device {
+    bridge = "vmbr0"
+  }
+
+  disk {
+    datastore_id = "ssd2"
+    import_from  = "local:import/ubuntu-24.qcow2"
+    interface    = "virtio0"
+    size         = 25
+  }
+
+  initialization {
+    datastore_id = "local-lvm"
+
+    user_data_file_id = proxmox_virtual_environment_file.cloudinit_user_data.id
+
+    ip_config {
+      ipv4 {
+        address = "dhcp"
+      }
+    }
+  }
+}
+
+#############################################
+# Output
+#############################################
+output "node1_ip" {
+  value = proxmox_virtual_environment_vm.node1.ipv4_addresses
+}
