@@ -90,7 +90,7 @@ variable "master_datastore" {
 
 variable "worker_datastore" {
   type    = string
-  default = "ssd2"
+  default = "local-lvm"
 }
 variable "master_vmid_start" {
   type    = number

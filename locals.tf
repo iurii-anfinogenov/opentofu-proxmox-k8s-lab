@@ -21,7 +21,7 @@ locals {
     worker2 = {
       role      = "worker"
       cpu       = var.worker_cpu
-      memory    = 8192
+      memory    = 4096
       disk      = var.worker_disk
       datastore = var.worker_datastore
       ip_offset = var.worker_ip_offset
