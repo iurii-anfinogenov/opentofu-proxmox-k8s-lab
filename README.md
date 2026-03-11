@@ -1,5 +1,8 @@
 # OpenTofu Proxmox Kubernetes Lab
 
+Этот проект часть курса:
+[Terraform + Proxmox: практический курс](https://stepik.org/a/238385)
+
 Infrastructure-as-Code проект для развёртывания Kubernetes нод на Proxmox с помощью OpenTofu.
 
 Проект демонстрирует безопасное управление кластером: удаление или добавление одной ноды не приводит к пересозданию остальных.
