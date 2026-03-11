@@ -5,6 +5,7 @@ variable "ssh_key" {
 variable "nodes" {
   type = map(object({
     role      = string
+    index     = number
     cpu       = number
     memory    = number
     disk      = number
