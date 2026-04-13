@@ -9,3 +9,5 @@ output "nodes_hostnames" {
 output "nodes_vmid" {
   value = module.cluster.vmids
 }
+
+

@@ -1,0 +1,35 @@
+#cloud-config
+
+timezone: Europe/Moscow
+
+users:
+  - default
+  - name: ubuntu
+    groups: [sudo]
+    shell: /bin/bash
+    lock_passwd: true
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    ssh_authorized_keys:
+      - ${ssh_key}
+
+ssh_pwauth: false
+
+package_update: true
+
+packages:
+  - qemu-guest-agent
+
+runcmd:
+  - systemctl enable --now qemu-guest-agent
+  - hostnamectl set-hostname ${hostname}
+  - systemctl disable --now packagekit
+  - systemctl disable --now ModemManager
+  - systemctl disable --now multipathd  
+
+write_files:
+  - path: /etc/motd
+    content: |
+      Managed by OpenTofu
+
+
+final_message: "cloud-init finished"

@@ -1,48 +1,51 @@
-# Terraform / OpenTofu
-.terraform/
-.terraform.lock.hcl
+# OpenTofu / Terraform
+**/.terraform/
+**/.terraform.lock.hcl
 
-# State files (никогда не коммитим!)
-terraform.tfstate
-terraform.tfstate.backup
-*.tfstate
-*.tfstate.*
+# State
+**/*.tfstate
+**/*.tfstate.*
+**/crash.log
+**/crash.*.log
 
-# Персональные переменные
-terraform.tfvars
-*.tfvars.json
-*.auto.tfvars
+# Variable files with secrets
+**/*.tfvars
+**/*.tfvars.json
+!**/*.tfvars.example
 
-# Crash logs
-crash.log
-crash.*.log
+# Optional local override files
+**/override.tf
+**/override.tf.json
+**/*_override.tf
+**/*_override.tf.json
 
-# Плановое состояние (может содержать приватные данные)
-*.tfplan
+# CLI config / credentials
+.terraformrc
+terraform.rc
 
-# Linux/macOS мусор
-*.swp
-*.swo
-*.bak
-*~
-.DS_Store
+# Environment files
+.env
+.env.*
+!.env.example
 
-# VSCode
-.vscode/
-.history/
-
-# JetBrains IDE
-.idea/
-*.iml
-
-# Cloud-init temp files (если появятся)
-cloud-init.log
-
-# SSH keys (на будущее)
+# Secrets / keys
 *.pem
 *.key
+*.p12
+*.pfx
 id_rsa
 id_rsa.pub
 id_ed25519
 id_ed25519.pub
 
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+notes.md

@@ -4,25 +4,21 @@ variable "ssh_key" {
 
 variable "nodes" {
   type = map(object({
-    role      = string
     index     = number
     cpu       = number
     memory    = number
     disk      = number
     datastore = string
-    ip_offset = number
+    ip_offset = optional(number)
+    ip        = optional(string)
+    vmid      = optional(number)
+    vlan_id   = optional(number)
+    data_disk = optional(number)
+    cloudinit = optional(string)
   }))
 }
 
-variable "hostname_prefix" {
-  type = string
-}
-
 variable "cluster_ip_start" {
-  type = number
-}
-
-variable "master_vmid_start" {
   type = number
 }
 
@@ -64,4 +60,11 @@ variable "network_cidr" {
 
 variable "cluster_gateway" {
   type = string
+}
+
+
+
+variable "data_datastore" {
+  type        = string
+  description = "Datastore for data disk"
 }

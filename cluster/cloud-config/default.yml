@@ -1,0 +1,34 @@
+#cloud-config
+# Создать passwd hash: openssl passwd -6
+
+timezone: Europe/Moscow
+
+users:
+  - name: ubuntu
+    groups: [sudo]
+    shell: /bin/bash
+    lock_passwd: false
+    passwd: "$6$M8xzsYT0lwWjlcdH$HJRhw0rBb2WowCbqg03/WvMUlte0j5SLs9tAVCxCukEqWAt7XG0ceWYc5GRUBmRxFRTbcEDrdCVTXu5jIxN2f0"
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    ssh_authorized_keys:
+      - ${ssh_key}
+
+package_update: true
+
+packages:
+  - qemu-guest-agent
+
+runcmd:
+  - systemctl enable --now qemu-guest-agent
+  - hostnamectl set-hostname ${hostname}
+  - systemctl disable --now packagekit
+  - systemctl disable --now ModemManager
+  - systemctl disable --now multipathd  
+
+write_files:
+  - path: /etc/motd
+    content: |
+      Managed by OpenTofu
+
+
+final_message: "cloud-init finished"

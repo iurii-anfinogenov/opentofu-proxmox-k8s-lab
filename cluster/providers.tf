@@ -2,6 +2,7 @@ terraform {
   required_providers {
     proxmox = {
       source = "registry.opentofu.org/bpg/proxmox"
+      version = "= 0.101.1"
     }
   }
 }
@@ -14,6 +15,6 @@ provider "proxmox" {
   ssh {
     username    = "root"
     agent       = true
-    private_key = file(pathexpand("~/.ssh/id_ed25519"))
+    private_key = file(pathexpand("~/.ssh/id_rsa"))
   }
 }  

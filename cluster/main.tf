@@ -1,17 +1,14 @@
 data "local_file" "ssh_key" {
-  filename = pathexpand("~/.ssh/id_ed25519.pub")
+  filename = pathexpand("~/.ssh/id_rsa.pub")
 }
 
-
 module "cluster" {
-  source = "./modules/k8s-node"
+  source = "../modules/node"
 
   nodes   = local.nodes
   ssh_key = trimspace(data.local_file.ssh_key.content)
 
-  hostname_prefix   = var.hostname_prefix
   cluster_ip_start  = var.cluster_ip_start
-  master_vmid_start = var.master_vmid_start
   worker_vmid_start = var.worker_vmid_start
 
   cloudinit_datastore = var.cloudinit_datastore
@@ -25,4 +22,6 @@ module "cluster" {
   network_base    = var.network_base
   network_cidr    = var.network_cidr
   cluster_gateway = var.cluster_gateway
+
+  data_datastore = var.data_datastore
 }

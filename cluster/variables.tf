@@ -27,30 +27,15 @@ variable "image_file" {
   default = "import/ubuntu-24.qcow2"
 }
 
-variable "hostname_prefix" {
-  type    = string
-  default = "k8s"
-}
-
-variable "master_cpu" {
-  default = 2
-}
-
 variable "worker_cpu" {
   default = 2
 }
 
-variable "master_memory" {
-  default = 4096
-}
 
 variable "worker_memory" {
-  default = 4096
+  default = 2048
 }
 
-variable "master_disk" {
-  default = 20
-}
 
 variable "worker_disk" {
   default = 20
@@ -67,14 +52,11 @@ variable "network_cidr" {
 variable "cluster_gateway" {
   default = "192.168.22.1"
 }
-
+ 
 variable "cluster_ip_start" {
-  default = 40
+  default = 10
 }
 
-variable "master_ip_offset" {
-  default = 0
-}
 
 variable "worker_ip_offset" {
   default = 5
@@ -83,21 +65,22 @@ variable "worker_ip_offset" {
 variable "node_bridge" {
   default = "vmbr0"
 }
-variable "master_datastore" {
-  type    = string
-  default = "local-lvm"
-}
 
 variable "worker_datastore" {
   type    = string
   default = "local-lvm"
 }
-variable "master_vmid_start" {
-  type    = number
-  default = 2000
-}
+
+
 
 variable "worker_vmid_start" {
   type    = number
-  default = 2010
+  default = 3000
 }
+
+variable "data_datastore" {
+  type        = string
+  default = "data1"
+  description = "Datastore for VM data disks"
+}
+
