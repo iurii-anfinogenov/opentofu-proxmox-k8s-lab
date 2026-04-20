@@ -1,42 +1,21 @@
 # Proxmox API endpoint (формат обязателен: https://host:port/api2/json)
-proxmox_endpoint = "https://<IP>:<PORT>/api2/json"
+proxmox_endpoint     = "https://<IP>:<PORT>/api2/json"
 
 # ID API токена (формат: user@realm!token_name)
-proxmox_token_id = "terraform@ve!user"
+proxmox_token_id     = "terraform@pve!user"
 
 # Секрет API токена (не коммитить в git)
 proxmox_token_secret = "<PROXMOX_TOKEN>"
 
-
 # Стартовый VMID для worker-нод (будут увеличиваться автоматически)
-worker_vmid_start = 1000
-
+worker_vmid_start = 4000
 
 # Дефолтные ресурсы для worker VM
-worker_cpu    = 1        # количество CPU ядер
-worker_memory = 1024     # RAM в MB
-worker_disk   = 15       # размер системного диска в GB
+worker_cpu       = 2
+worker_memory    = 2048
+worker_disk      = 20
+worker_datastore = "ssd2"
 
-# Datastore для системного диска VM
-worker_datastore = "local-lvm"
-
-
-# Datastore, где лежит cloud image (qcow2)
 image_datastore = "local"
-
-# Путь к образу внутри datastore (без "local:" если провайдер сам добавляет)
-image_file = "import/ubuntu-24.qcow2"
-
-
-# Сетевые настройки
-cluster_gateway = "192.168.0.1"  # шлюз сети
-
-network_base = "192.168.0"       # база сети (используется для генерации IP)
-network_cidr = "24"               # маска сети (лучше как number, не string)
-
-# Смещение IP относительно base (например 0 → .0, 10 → .10)
-cluster_ip_start = 0
-
-
-# Datastore для дополнительных дисков (data disk)
+image_file      = "import/ubuntu-24.qcow2"
 data_datastore = "data1"

@@ -55,7 +55,6 @@ Telegram: https://t.me/uanfinogenov
    - datastore (local, local-lvm, ssd и т.д.)
    - image_datastore и путь к образу
    - сетевой bridge (например vmbr0)
-   - network_base и gateway
    - VLAN (если используется)
  - значения в примере не универсальны и зависят от конкретного Proxmox окружения
 
@@ -93,23 +92,16 @@ Cloud-init отвечает за конфигурацию ОС внутри VM:
 ```text
 .
 ├── README.md
-├── terraform.tfvars.example
-├── cluster/
-│   ├── cloud-config/
-│   │   └── default.yml
+├── cluster
+│   ├── cloud-config
 │   ├── locals.tf
 │   ├── main.tf
 │   ├── outputs.tf
 │   ├── providers.tf
-│   ├── terraform.tfvars
 │   └── variables.tf
-└── modules/
-    └── node/
-        ├── cloud-config/
-        │   └── default.yml
-        ├── main.tf
-        ├── outputs.tf
-        └── variables.tf
+├── modules
+│   └── node
+└── terraform.tfvars.example
 ```
 
 Где:
@@ -154,17 +146,6 @@ locals {
       ip        = "192.168.20.101"
       cloudinit = "worker.yml"
     }
-
-    worker-2 = {
-      index     = 2
-      cpu       = 2
-      memory    = 2048
-      disk      = 20
-      datastore = "ssd2"
-      ip        = "192.168.20.102"
-      cloudinit = "worker.yml"
-    }
-
     master-1 = {
       index     = 3
       cpu       = 4
@@ -472,45 +453,6 @@ qm template 9001
 
 ---
 
-## Переменные проекта
-
-Пример `terraform.tfvars.example`:
-
-```hcl
-# Proxmox API endpoint (формат: https://host:port/api2/json)
-proxmox_endpoint = "https://<IP>:<PORT>/api2/json"
-
-# ID API token (формат: user@realm!token_name)
-proxmox_token_id = "terraform@ve!user"
-
-# Secret API token
-proxmox_token_secret = "<PROXMOX_TOKEN>"
-
-# Стартовый VMID
-worker_vmid_start = 1000
-
-# Дефолтные ресурсы worker VM
-worker_cpu = 2
-worker_memory = 2048
-worker_disk = 20
-worker_datastore = "ssd2"
-
-# Datastore, где лежит cloud image
-image_datastore = "local"
-
-# Путь к образу
-image_file = "import/ubuntu-24.qcow2"
-
-# Сеть
-cluster_gateway = "192.168.20.1"
-network_base = "192.168.20"
-network_cidr = "24"
-cluster_ip_start = 0
-
-# Datastore для дополнительных дисков
-data_datastore = "data1"
-```
-
 Практика:
 
 * реальный `terraform.tfvars` не коммитить
@@ -535,54 +477,122 @@ data_datastore = "data1"
 # - если НЕ указан → используется default.yml
 # - если файл НЕ найден в cluster/cloud-config → используется fallback из модуля
 
-variable "nodes" {
-  type = map(object({
-    index     = number
-    cpu       = number
-    memory    = number
-    disk      = number
-    datastore = string
-    ip_offset = optional(number)
-    ip        = optional(string)
-    vmid      = optional(number)
-    vlan_id   = optional(number)
-    data_disk = optional(number)
-    cloudinit = optional(string)
+nodes = map(object({
+  index     = number
+  cpu       = number
+  memory    = number
+  vmid      = optional(number)
+  cloudinit = optional(string)
+
+  disks = list(object({
+    datastore   = string
+    interface   = string
+    size        = number
+    import_from = optional(string)
   }))
-}
+
+  network_devices = list(object({
+    bridge  = string
+    vlan_id = optional(number)
+
+    ip      = optional(string) # static | "dhcp" | null
+    cidr    = optional(number)
+    gateway = optional(string)
+  }))
+}))
+```
+---
+
+## DISKS
+
+### Принцип
+
+* список дисков
+* интерфейсы уникальны
+
+### Пример
+
+```hcl
+disks = [
+  {
+    datastore   = "ssd2"
+    interface   = "scsi0"
+    size        = 20
+    import_from = "local:import/ubuntu-24.qcow2"
+  },
+  {
+    datastore = "data1"
+    interface = "scsi1"
+    size      = 100
+  }
+]
+```
+
+### Правила
+
+* ровно 1 boot диск (`import_from`)
+* обычно:
+
+  * scsi0 → OS
+  * scsi1+ → data
+
+---
+
+## NETWORK
+
+### Принцип
+
+* сеть задаётся **на уровне интерфейса**
+* порядок = ethX
+
+```
+[0] → eth0
+[1] → eth1
 ```
 
 ---
 
-## VLAN
+### Поля
 
-Параметр:
+#### bridge
+
+* vmbr0, vmbr1
+* обязательно
+
+#### vlan_id
+
+* опционально
+* если нет → untagged
+
+---
+
+### IP режимы
+
+#### 1. Static
 
 ```hcl
-vlan_id = 20
+ip   = "192.168.20.10"
+cidr = 24
+gateway = "192.168.20.1"
 ```
 
-Поведение:
-
-* если `vlan_id` не указан -> обычная сеть без тегирования
-* если `vlan_id` указан -> VM подключается в соответствующий VLAN
-
-Пример:
+#### 2. DHCP
 
 ```hcl
-nodes = {
-  worker-1 = {
-    index     = 1
-    cpu       = 2
-    memory    = 2048
-    disk      = 20
-    datastore = "ssd2"
-    ip        = "192.168.20.101"
-    vlan_id   = 20
-    cloudinit = "worker.yml"
-  }
-}
+ip = "dhcp"
 ```
+
+#### 3. L2 only
+
+```hcl
+# ip не задан
+```
+### Важно
+
+* отсутствие ip ≠ DHCP
+* DHCP задаётся только через `"dhcp"`
+* gateway только один
+* обычно на eth0
 
 ---
 

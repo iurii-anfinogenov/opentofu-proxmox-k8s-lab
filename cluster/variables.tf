@@ -41,23 +41,6 @@ variable "worker_disk" {
   default = 20
 }
 
-variable "network_base" {
-  default = "192.168.22"
-}
-
-variable "network_cidr" {
-  default = "24"
-}
-
-variable "cluster_gateway" {
-  default = "192.168.22.1"
-}
- 
-variable "cluster_ip_start" {
-  default = 10
-}
-
-
 variable "worker_ip_offset" {
   default = 5
 }
@@ -65,6 +48,7 @@ variable "worker_ip_offset" {
 variable "node_bridge" {
   default = "vmbr0"
 }
+
 
 variable "worker_datastore" {
   type    = string
