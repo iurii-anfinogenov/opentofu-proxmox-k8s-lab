@@ -142,7 +142,7 @@
 locals {
   nodes = {
     k8s-master-1 = {
-      cloudinit = "master.yml"
+      cloudinit = "rocky.yml"
       index     = 1
       cpu       = var.worker_cpu
       memory    = 4092
@@ -163,61 +163,61 @@ locals {
           gateway = "192.168.20.1"
         }
       ]
-    },
-    k8s-worker-1 = {
-      cloudinit = "worker.yml"
-      index     = 2
-      cpu       = var.worker_cpu
-      memory    = 8192
-      disks = [
-        {
-          datastore   = var.worker_datastore
-          interface   = "scsi0"
-          size        = var.worker_disk
-          import_from = "${var.image_datastore}:${var.image_file}"
-        }
-      ]      
-      network_devices = [
-        {
-          bridge  = var.node_bridge
-          vlan_id = 20
-          ip      = "192.168.20.22"
-          cidr    = 24
-          gateway = "192.168.20.1"
-        }
-      ]
-    },    
-    k8s-worker-2 = {
-      cloudinit = "worker.yml"
-      index     = 3
-      cpu       = var.worker_cpu
-      memory    = 8192
-      disks = [
-        {
-          datastore   = var.worker_datastore
-          interface   = "scsi0"
-          size        = var.worker_disk
-          import_from = "${var.image_datastore}:${var.image_file}"
-        },
-        {
-          datastore = "data1"
-          interface = "scsi1"
-          size      = 100
-        }
-      ]    
-      network_devices = [
-        {
-          bridge  = var.node_bridge
-          vlan_id = 20
-          ip      = "192.168.20.23"
-          cidr    = 24
-          gateway = "192.168.20.1"
-        },
-        {
-          bridge = "vmbr0" 
-          ip     = "dhcp"
-        }     
-      ]
-    }     
+    }
+    # k8s-worker-1 = {
+    #   cloudinit = "worker.yml"
+    #   index     = 2
+    #   cpu       = var.worker_cpu
+    #   memory    = 8192
+    #   disks = [
+    #     {
+    #       datastore   = var.worker_datastore
+    #       interface   = "scsi0"
+    #       size        = var.worker_disk
+    #       import_from = "${var.image_datastore}:${var.image_file}"
+    #     }
+    #   ]      
+    #   network_devices = [
+    #     {
+    #       bridge  = var.node_bridge
+    #       vlan_id = 20
+    #       ip      = "192.168.20.22"
+    #       cidr    = 24
+    #       gateway = "192.168.20.1"
+    #     }
+    #   ]
+    # },    
+    # k8s-worker-2 = {
+    #   cloudinit = "worker.yml"
+    #   index     = 3
+    #   cpu       = var.worker_cpu
+    #   memory    = 8192
+    #   disks = [
+    #     {
+    #       datastore   = var.worker_datastore
+    #       interface   = "scsi0"
+    #       size        = var.worker_disk
+    #       import_from = "${var.image_datastore}:${var.image_file}"
+    #     },
+    #     {
+    #       datastore = "data1"
+    #       interface = "scsi1"
+    #       size      = 100
+    #     }
+    #   ]    
+    #   network_devices = [
+    #     {
+    #       bridge  = var.node_bridge
+    #       vlan_id = 20
+    #       ip      = "192.168.20.23"
+    #       cidr    = 24
+    #       gateway = "192.168.20.1"
+    #     },
+    #     {
+    #       bridge = "vmbr0" 
+    #       ip     = "dhcp"
+    #     }     
+    #   ]
+    # }     
   }
 }

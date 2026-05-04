@@ -32,6 +32,7 @@ resource "proxmox_virtual_environment_file" "cloudinit" {
 
 resource "proxmox_virtual_environment_vm" "nodes" {
   for_each = local.nodes
+  tags = ["tofu"]  
 
   name      = local.hostname_map[each.key]
   node_name = var.proxmox_node
@@ -48,6 +49,7 @@ resource "proxmox_virtual_environment_vm" "nodes" {
 
   cpu {
     cores = each.value.cpu
+    type  = "host"    
   }
 
   memory {

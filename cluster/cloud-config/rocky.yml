@@ -1,0 +1,21 @@
+#cloud-config
+timezone: Europe/Moscow
+
+users:
+  - name: iurii
+    groups: [wheel]
+    shell: /bin/bash
+    lock_passwd: false
+    passwd: "$6$Zc8nwvtw0Kns5.sD$FpQ4aBSeGogefqjM4we4U5QQd4YBtC98tuG3rR4j9ZmbtC1kyFf2sY/IodYW3wG.U81aEntlZrtOTOqw3ZcOc0"
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    ssh_authorized_keys:
+      - ${ssh_key}
+
+package_update: true
+
+packages:
+  - qemu-guest-agent
+
+runcmd:
+  - systemctl enable --now qemu-guest-agent
+  - hostnamectl set-hostname ${hostname}
