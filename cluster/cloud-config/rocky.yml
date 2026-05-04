@@ -2,11 +2,11 @@
 timezone: Europe/Moscow
 
 users:
-  - name: iurii
+  - name: user
     groups: [wheel]
     shell: /bin/bash
     lock_passwd: false
-    passwd: "$6$Zc8nwvtw0Kns5.sD$FpQ4aBSeGogefqjM4we4U5QQd4YBtC98tuG3rR4j9ZmbtC1kyFf2sY/IodYW3wG.U81aEntlZrtOTOqw3ZcOc0"
+    passwd: "$6$bqp3nBwI4R3D30rg$Gyx0u62YOyV2fYQsAzfD5n8Uk1MjABmsXslS8.gq6Q2/ge82Dpm.icNX6cVTiA53GJ6fw57rwMKuKGGfytWVb/"
     sudo: ["ALL=(ALL) NOPASSWD:ALL"]
     ssh_authorized_keys:
       - ${ssh_key}
