@@ -30,15 +30,5 @@ write_files:
     content: |
       Managed by OpenTofu
 
-  - path: /etc/profile.d/custom-ps1.sh
-    permissions: "0644"
-    owner: root:root
-    content: |
-      if [ "$EUID" -eq 0 ]; then
-        PS1='\[\e[1;31m\]┌──(\u@\h)-[\w]\n└─#\[\e[0m\] '
-      else
-        PS1='\[\e[1;32m\]┌──(\u@\h)-[\w]\n└─\$\[\e[0m\] '
-      fi 
-
 
 final_message: "cloud-init finished"
