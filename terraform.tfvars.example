@@ -10,12 +10,14 @@ proxmox_token_secret = "<PROXMOX_TOKEN>"
 # Стартовый VMID для worker-нод (будут увеличиваться автоматически)
 worker_vmid_start = 4000
 
-# Дефолтные ресурсы для worker VM
+
+
 worker_cpu       = 2
 worker_memory    = 2048
 worker_disk      = 20
 worker_datastore = "ssd2"
 
 image_datastore = "local"
-image_file      = "import/ubuntu-24.qcow2"
+# image_file      = "import/ubuntu-24.qcow2"
+# image_file      = "import/rocky9.qcow2"
 data_datastore = "data1"

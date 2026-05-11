@@ -1,223 +1,156 @@
-# nodes — описание виртуальных машин
-#
-# - каждая VM описывается как набор ресурсов:
-#     - CPU / memory
-#     - disks (список дисков)
-#     - network_devices (список сетевых интерфейсов)
-#
-# - модель полностью декларативная:
-#     VM = набор дисков + набор NIC
-#
-# ------------------------------------------------------------------------------
-# DISKS
-# ------------------------------------------------------------------------------
-#
-# disks:
-# - список дисков VM
-# - порядок не критичен, но интерфейсы должны быть уникальны (scsi0, scsi1, ...)
-#
-# поля:
-#
-# datastore:
-# - datastore в Proxmox
-# - пример: local-lvm, ssd2
-#
-# interface:
-# - имя интерфейса диска
-# - пример: scsi0, scsi1, scsi2
-# - ДОЛЖЕН быть уникален внутри VM
-#
-# size:
-# - размер диска в GB
-#
-# import_from:
-# - опционально
-# - используется ТОЛЬКО для boot диска
-# - формат: "<datastore>:<image>"
-#
-# ВАЖНО:
-# - должен быть ровно один boot диск (import_from)
-# - обычно:
-#     scsi0 → boot диск
-#     scsi1+ → data диски
-#
-# ------------------------------------------------------------------------------
-# NETWORK
-# ------------------------------------------------------------------------------
+# nodes - описание VM.
 #
 # network_devices:
-# - список сетевых интерфейсов VM
-#
-# порядок:
-# - [0] → eth0 (основной интерфейс)
-# - [1] → eth1
-# - [2] → eth2
-#
-# ВАЖНО:
-# - порядок критичен
-# - eth0 обычно management
-# - неправильный порядок → потеря доступа к VM
-#
-# поля:
-#
-# bridge:
-# - имя Proxmox bridge (vmbr0, vmbr1, ...)
-# - ОБЯЗАТЕЛЬНО
-#
-# vlan_id:
-# - опционально
-# - если не указан → untagged
-# - если указан → интерфейс в VLAN (bridge должен быть VLAN-aware)
-#
-# ip:
-# - режим IP интерфейса
-#
-# варианты:
-# - не указан → интерфейс без конфигурации (L2 only, без IP)
-# - "dhcp" → включен DHCP
-# - "192.168.x.x" → статический IP (требует cidr)
-#
-# cidr:
-# - маска сети (например 24)
-# - ОБЯЗАТЕЛЕН для статического IP
-# - НЕ используется при dhcp
-#
-# gateway:
-# - опционально
-# - задаёт default route
-# - должен быть указан только один раз на VM
-# - обычно задаётся на eth0
-#
-# ВАЖНО:
-# - отсутствие ip ≠ DHCP
-# - DHCP задаётся только через ip = "dhcp"
-# - интерфейс без ip → cloud-init его не конфигурирует
-#
-# ------------------------------------------------------------------------------
-# CLOUD-INIT
-# ------------------------------------------------------------------------------
-#
-# cloudinit:
-# - имя cloud-init файла
-#
-# поиск:
-# - cloud-config/<имя>.yml (root проекта)
-# - если не найден → fallback:
-#   modules/node/cloud-config/default.yml
-#
-# ------------------------------------------------------------------------------
-# РЕКОМЕНДАЦИИ
-# ------------------------------------------------------------------------------
+# - порядок = eth0, eth1 ...
+# - eth0: management, VLAN 20, 192.168.20.0/24, с gateway
+# - eth1: secondary/storage, untagged, 192.168.22.0/24, без gateway
+# - gateway указывать только на одном интерфейсе
 #
 # disks:
-# - scsi0 → OS (boot)
-# - scsi1+ → data / storage
+# - root disk использует var.disk_interface (рекомендуется scsi0)
+# - data_disk - один дополнительный диск на var.data_datastore
+# - disks - произвольные дополнительные диски
+# - каждый дополнительный диск должен иметь уникальный interface:
+#   scsi1, scsi2, scsi3 ...
 #
-# network:
-# - eth0 → management (static IP + gateway)
-# - eth1 → storage / overlay / secondary
+# recommended layout:
+# - scsi0 = root disk
+# - scsi1 = first data disk
+# - scsi2 = second data disk
 #
-# DHCP:
-# - использовать только для вторичных интерфейсов
-# - не задавать gateway вручную на DHCP интерфейсе
-# - учитывать, что DHCP может выдать свой default route
+# cloudinit:
+# - worker.yml для Ubuntu
+# - rocky.yml для Rocky
 #
-# ------------------------------------------------------------------------------
-# ПОВЕДЕНИЕ
-# ------------------------------------------------------------------------------
+# images:
+# - import/ubuntu-24.qcow2
+# - import/rocky9.qcow2
 #
-# - network_devices → преобразуется в network_device + ip_config
-# - соответствие строго по порядку:
-#     network_devices[0] → eth0 → ip_config[0]
-#     network_devices[1] → eth1 → ip_config[1]
-#
-# - ip_config создаётся только если:
-#     - задан ip (static или dhcp)
-#
-# - если ip не задан:
-#     - интерфейс создаётся
-#     - но не конфигурируется внутри VM
-#
-# ------------------------------------------------------------------------------
+# datastore examples:
+# - ssd2      - fast VM/root disks
+# - local-lvm - standard VM storage
+# - data1     - large data disks
+
 locals {
+  vm_defaults = {
+    cpu       = var.worker_cpu
+    memory    = var.worker_memory
+    disk      = var.worker_disk
+    datastore = var.worker_datastore
+    cloudinit = "worker.yml"
+  }
+
+  net_mgmt = {
+    bridge  = var.node_bridge
+    vlan_id = 20
+    cidr    = 24
+    gateway = "192.168.20.1"
+  }
+
+  net_secondary = {
+    bridge = var.node_bridge
+    cidr   = 24
+  }
+
   nodes = {
-    k8s-master-1 = {
-      cloudinit = "rocky.yml"
-      index     = 1
-      cpu       = var.worker_cpu
-      memory    = 4092
+    # Ubuntu, root disk on ssd2, one VLAN 20 interface
+    lab-1 = merge(local.vm_defaults, {
+      image_file = "import/ubuntu-24.qcow2"
+      cloudinit  = "worker.yml"
+      index      = 1
+      datastore  = "ssd2"
+
+      network_devices = [
+        merge(local.net_mgmt, {
+          ip = "192.168.20.11"
+        })
+      ]
+    })
+
+    # Rocky, root disk on local-lvm, one VLAN 20 interface
+    lab-2 = merge(local.vm_defaults, {
+      image_file = "import/rocky9.qcow2"
+      cloudinit  = "rocky.yml"
+      index      = 2
+      cpu        = 4
+      memory     = 4096
+      datastore  = "local-lvm"
+
+      network_devices = [
+        merge(local.net_mgmt, {
+          ip = "192.168.20.12"
+        })
+      ]
+    })
+
+    # Rocky, root disk on ssd2, one data disk on data1
+    lab-3 = merge(local.vm_defaults, {
+      image_file = "import/rocky9.qcow2"
+      cloudinit  = "rocky.yml"
+      index      = 3
+      cpu        = 8
+      memory     = 8192
+      datastore  = "ssd2"
+      data_disk  = 100
+
+      network_devices = [
+        merge(local.net_mgmt, {
+          ip = "192.168.20.13"
+        })
+      ]
+    })
+
+    # Ubuntu, root disk on local-lvm, two interfaces:
+    # eth0 VLAN 20: 192.168.20.0/24
+    # eth1 untagged: 192.168.22.0/24
+    lab-4 = merge(local.vm_defaults, {
+      image_file = "import/ubuntu-24.qcow2"
+      cloudinit  = "worker.yml"
+      index      = 4
+      cpu        = 4
+      memory     = 4096
+      datastore  = "local-lvm"
+
+      network_devices = [
+        merge(local.net_mgmt, {
+          ip = "192.168.20.14"
+        }),
+        merge(local.net_secondary, {
+          ip = "192.168.22.14"
+        })
+      ]
+    })
+
+    # Rocky, root disk on ssd2, multiple custom data disks
+    lab-5 = merge(local.vm_defaults, {
+      image_file = "import/rocky9.qcow2"
+      cloudinit  = "rocky.yml"
+      index      = 5
+      cpu        = 4
+      memory     = 4096
+      datastore  = "ssd2"
+
       disks = [
         {
-          datastore   = var.worker_datastore
-          interface   = "scsi0"
-          size        = var.worker_disk
-          import_from = "${var.image_datastore}:${var.image_file}"
-        }
-      ]      
-      network_devices = [
+          size_gb      = 100
+          datastore_id = "data1"
+          interface    = "scsi1"
+        },
         {
-          bridge  = var.node_bridge
-          vlan_id = 20
-          ip      = "192.168.20.11"
-          cidr    = 24
-          gateway = "192.168.20.1"
+          size_gb      = 200
+          datastore_id = "ssd2"
+          interface    = "scsi2"
         }
       ]
-    }
-    # k8s-worker-1 = {
-    #   cloudinit = "worker.yml"
-    #   index     = 2
-    #   cpu       = var.worker_cpu
-    #   memory    = 8192
-    #   disks = [
-    #     {
-    #       datastore   = var.worker_datastore
-    #       interface   = "scsi0"
-    #       size        = var.worker_disk
-    #       import_from = "${var.image_datastore}:${var.image_file}"
-    #     }
-    #   ]      
-    #   network_devices = [
-    #     {
-    #       bridge  = var.node_bridge
-    #       vlan_id = 20
-    #       ip      = "192.168.20.22"
-    #       cidr    = 24
-    #       gateway = "192.168.20.1"
-    #     }
-    #   ]
-    # },    
-    # k8s-worker-2 = {
-    #   cloudinit = "worker.yml"
-    #   index     = 3
-    #   cpu       = var.worker_cpu
-    #   memory    = 8192
-    #   disks = [
-    #     {
-    #       datastore   = var.worker_datastore
-    #       interface   = "scsi0"
-    #       size        = var.worker_disk
-    #       import_from = "${var.image_datastore}:${var.image_file}"
-    #     },
-    #     {
-    #       datastore = "data1"
-    #       interface = "scsi1"
-    #       size      = 100
-    #     }
-    #   ]    
-    #   network_devices = [
-    #     {
-    #       bridge  = var.node_bridge
-    #       vlan_id = 20
-    #       ip      = "192.168.20.23"
-    #       cidr    = 24
-    #       gateway = "192.168.20.1"
-    #     },
-    #     {
-    #       bridge = "vmbr0" 
-    #       ip     = "dhcp"
-    #     }     
-    #   ]
-    # }     
+
+      network_devices = [
+        merge(local.net_mgmt, {
+          ip = "192.168.20.15"
+        }),
+        merge(local.net_secondary, {
+          ip = "192.168.22.15"
+        })
+      ]
+    })
   }
 }

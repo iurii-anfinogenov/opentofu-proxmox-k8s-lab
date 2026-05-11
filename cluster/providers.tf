@@ -1,8 +1,13 @@
 terraform {
+  required_version = ">= 1.8.0"
   required_providers {
     proxmox = {
-      source = "registry.opentofu.org/bpg/proxmox"
-      version = "= 0.101.1"
+      source  = "registry.opentofu.org/bpg/proxmox"
+      version = ">= 0.101.1"
+    }
+    local = {
+      source  = "hashicorp/local"
+      version = "~> 2.5"
     }
   }
 }

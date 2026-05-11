@@ -1,6 +1,14 @@
-variable "proxmox_endpoint" {}
-variable "proxmox_token_id" {}
-variable "proxmox_token_secret" {}
+variable "proxmox_endpoint" {
+  type = string
+}
+variable "proxmox_token_id" {
+  type      = string
+  sensitive = true
+}
+variable "proxmox_token_secret" {
+  type      = string
+  sensitive = true
+}
 
 variable "proxmox_node" {
   type    = string
@@ -14,7 +22,7 @@ variable "cloudinit_datastore" {
 
 variable "disk_interface" {
   type    = string
-  default = "virtio0"
+  default = "scsi0"
 }
 
 variable "image_datastore" {
@@ -29,23 +37,23 @@ variable "image_file" {
 
 variable "worker_cpu" {
   default = 2
+  type    = number
 }
 
 
 variable "worker_memory" {
+  type    = number
   default = 2048
 }
 
 
 variable "worker_disk" {
+  type    = number
   default = 20
 }
 
-variable "worker_ip_offset" {
-  default = 5
-}
-
 variable "node_bridge" {
+  type    = string
   default = "vmbr0"
 }
 
@@ -64,7 +72,7 @@ variable "worker_vmid_start" {
 
 variable "data_datastore" {
   type        = string
-  default = "data1"
+  default     = "data1"
   description = "Datastore for VM data disks"
 }
 

@@ -8,7 +8,7 @@ users:
     groups: [sudo]
     shell: /bin/bash
     lock_passwd: false
-    passwd: "$6$bqp3nBwI4R3D30rg$Gyx0u62YOyV2fYQsAzfD5n8Uk1MjABmsXslS8.gq6Q2/ge82Dpm.icNX6cVTiA53GJ6fw57rwMKuKGGfytWVb/"
+    passwd: "$6$bqp3nBwI4R3D30rg$Gyx0u62YOyV2fYQsAzfD5n8Uk1MjABmsXslS8.gq6Q2/ge82Dpm.icNX6cVTiA53GJ6fw57rwMKuKGGfytWVb/" 
     sudo: ["ALL=(ALL) NOPASSWD:ALL"]
     ssh_authorized_keys:
       - ${ssh_key}
@@ -18,17 +18,18 @@ package_update: true
 packages:
   - qemu-guest-agent
 
+
+write_files:
+  - path: /etc/motd
+    content: |
+      Managed by OpenTofu
 runcmd:
   - systemctl enable --now qemu-guest-agent
   - hostnamectl set-hostname ${hostname}
   - systemctl disable --now packagekit
   - systemctl disable --now ModemManager
   - systemctl disable --now multipathd  
-
-write_files:
-  - path: /etc/motd
-    content: |
-      Managed by OpenTofu
+ 
 
 
 final_message: "cloud-init finished"

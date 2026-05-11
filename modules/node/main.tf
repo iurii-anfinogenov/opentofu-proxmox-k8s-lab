@@ -32,12 +32,11 @@ resource "proxmox_virtual_environment_file" "cloudinit" {
 
 resource "proxmox_virtual_environment_vm" "nodes" {
   for_each = local.nodes
-  tags = ["tofu"]  
+  tags = ["tofu"]
 
   name      = local.hostname_map[each.key]
   node_name = var.proxmox_node
 
-  # allow vmid override
   vm_id = coalesce(
     lookup(local.nodes[each.key], "vmid", null),
     local.vmid_map[each.key]
@@ -49,7 +48,8 @@ resource "proxmox_virtual_environment_vm" "nodes" {
 
   cpu {
     cores = each.value.cpu
-    type  = "host"    
+    type  = "host"
+
   }
 
   memory {
@@ -64,38 +64,59 @@ resource "proxmox_virtual_environment_vm" "nodes" {
       vlan_id = try(network_device.value.vlan_id, null)
     }
   }
-dynamic "disk" {
-  for_each = each.value.disks
 
-  content {
-    datastore_id = disk.value.datastore
-    interface    = disk.value.interface
-    size         = disk.value.size
+  dynamic "clone" {
+    for_each = try(each.value.template_id, null) == null ? [] : [each.value.template_id]
 
-    # только для первого (boot) диска
-    import_from = try(disk.value.import_from, "")
-  }
-}
-
-initialization {
-  datastore_id = [
-    for d in each.value.disks :
-    d.datastore if try(d.import_from, null) != null
-  ][0]
-  user_data_file_id = proxmox_virtual_environment_file.cloudinit[each.key].id
-
-dynamic "ip_config" {
-  for_each = [
-    for net in each.value.network_devices :
-    net if try(net.ip, null) != null
-  ]
-
-  content {
-    ipv4 {
-      address = ip_config.value.ip == "dhcp" ? "dhcp" : "${ip_config.value.ip}/${coalesce(ip_config.value.cidr, 24)}"
-      gateway = try(ip_config.value.gateway, null)
+    content {
+      vm_id = clone.value
     }
   }
-}
-}
+
+  dynamic "disk" {
+    for_each = try(each.value.template_id, null) == null ? [1] : []
+
+    content {
+      datastore_id = each.value.datastore
+      import_from  = "${var.image_datastore}:${coalesce(each.value.image_file, var.image_file)}"
+      interface    = var.disk_interface
+      size         = each.value.disk
+    }
+  }
+
+  dynamic "disk" {
+    for_each = try(each.value.data_disk, null) == null ? [] : [each.value.data_disk]
+
+    content {
+      datastore_id = var.data_datastore
+      interface    = "scsi1"
+      size         = disk.value
+    }
+  }
+ 
+  dynamic "disk" {
+    for_each = try(each.value.disks, null) != null ? each.value.disks : []
+
+    content {
+      datastore_id = disk.value.datastore_id
+      interface    = disk.value.interface
+      size         = disk.value.size_gb
+    }
+  }
+
+  initialization {
+    datastore_id      = each.value.datastore
+    user_data_file_id = proxmox_virtual_environment_file.cloudinit[each.key].id
+
+    dynamic "ip_config" {
+      for_each = each.value.network_devices
+
+      content {
+        ipv4 {
+          address = try(ip_config.value.ip, "dhcp") == null ? "dhcp" : "${ip_config.value.ip}/${ip_config.value.cidr}"
+          gateway = try(ip_config.value.gateway, null)
+        }
+      }
+    }
+  }
 }

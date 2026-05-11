@@ -16,4 +16,7 @@ module "cluster" {
   node_bridge     = var.node_bridge
   image_datastore = var.image_datastore
   image_file      = var.image_file
+  disk_interface  = var.disk_interface
+
+  data_datastore = var.data_datastore
 }
