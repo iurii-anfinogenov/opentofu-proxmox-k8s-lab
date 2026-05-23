@@ -13,20 +13,22 @@ resource "proxmox_virtual_environment_file" "cloudinit" {
   node_name    = var.proxmox_node
 
   source_raw {
-    file_name = "${each.key}.yml" 
+    file_name = "${each.key}.yml"
     data = fileexists("${path.root}/cloud-config/${coalesce(each.value.cloudinit, "default.yml")}") ? templatefile(
       "${path.root}/cloud-config/${coalesce(each.value.cloudinit, "default.yml")}",
       {
-        hostname      = local.hostname_map[each.key]
-        ssh_key       = local.ssh_public_key
+        hostname = local.hostname_map[each.key]
+        ipv4     = each.value.network_devices[0].ip
+        ssh_key  = local.ssh_public_key
       }
     ) : templatefile(
       "${path.module}/cloud-config/default.yml",
       {
-        hostname      = local.hostname_map[each.key]
-        ssh_key       = local.ssh_public_key
+        hostname = local.hostname_map[each.key]
+        ipv4     = each.value.network_devices[0].ip
+        ssh_key  = local.ssh_public_key
       }
-    )   
+    )
   }
 }
 

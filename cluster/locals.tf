@@ -37,7 +37,7 @@ locals {
     memory    = var.worker_memory
     disk      = var.worker_disk
     datastore = var.worker_datastore
-    cloudinit = "worker.yml"
+    cloudinit = "ubuntu.yml"
   }
 
   net_mgmt = {
@@ -56,7 +56,6 @@ locals {
     # Ubuntu, root disk on ssd2, one VLAN 20 interface
     lab-1 = merge(local.vm_defaults, {
       image_file = "import/ubuntu-24.qcow2"
-      cloudinit  = "worker.yml"
       index      = 1
       datastore  = "ssd2"
 
@@ -105,7 +104,7 @@ locals {
     # eth1 untagged: 192.168.22.0/24
     lab-4 = merge(local.vm_defaults, {
       image_file = "import/ubuntu-24.qcow2"
-      cloudinit  = "worker.yml"
+      cloudinit  = "ubuntu.yml"
       index      = 4
       cpu        = 4
       memory     = 4096

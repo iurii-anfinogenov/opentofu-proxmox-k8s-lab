@@ -8,7 +8,7 @@ users:
     groups: [sudo]
     shell: /bin/bash
     lock_passwd: false
-    passwd: "$6$M8xzsYT0lwWjlcdH$HJRhw0rBb2WowCbqg03/WvMUlte0j5SLs9tAVCxCukEqWAt7XG0ceWYc5GRUBmRxFRTbcEDrdCVTXu5jIxN2f0"
+    passwd: "$6$u42qhP7hsnV3aM.w$HikwZmBp/zavB7JGzrer6TDG830JXI5g2jV4a6uyW0.WDAf.jrCLZ8nGAx7UuTwNiCeNopIY1mbr2Vjl3A7u00"
     sudo: ["ALL=(ALL) NOPASSWD:ALL"]
     ssh_authorized_keys:
       - ${ssh_key}
@@ -26,9 +26,18 @@ runcmd:
   - systemctl disable --now multipathd  
 
 write_files:
-  - path: /etc/motd
+  - path: /etc/hosts
     content: |
-      Managed by OpenTofu
+      127.0.0.1 localhost
+      ${ipv4} ${hostname}
+
+      # The following lines are desirable for IPv6 capable hosts
+      ::1 ip6-localhost ip6-loopback
+      fe00::0 ip6-localnet
+      ff00::0 ip6-mcastprefix
+      ff02::1 ip6-allnodes
+      ff02::2 ip6-allrouters
+      ff02::3 ip6-allhosts
 
 
 final_message: "cloud-init finished"

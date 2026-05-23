@@ -18,18 +18,30 @@ package_update: true
 packages:
   - qemu-guest-agent
 
-
-write_files:
-  - path: /etc/motd
-    content: |
-      Managed by OpenTofu
 runcmd:
   - systemctl enable --now qemu-guest-agent
   - hostnamectl set-hostname ${hostname}
   - systemctl disable --now packagekit
   - systemctl disable --now ModemManager
   - systemctl disable --now multipathd  
- 
+
+write_files:
+  - path: /etc/hosts
+    content: |
+      127.0.0.1 localhost
+      ${ipv4} ${hostname}
+
+      # The following lines are desirable for IPv6 capable hosts
+      ::1 ip6-localhost ip6-loopback
+      fe00::0 ip6-localnet
+      ff00::0 ip6-mcastprefix
+      ff02::1 ip6-allnodes
+      ff02::2 ip6-allrouters
+      ff02::3 ip6-allhosts
+
+  - path: /etc/motd
+    content: |
+      Managed by OpenTofu
 
 
 final_message: "cloud-init finished"
